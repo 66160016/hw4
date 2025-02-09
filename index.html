@@ -1,12 +1,97 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>ระบบจัดการตารางนัดหมาย</title>
+    <script defer src="script.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid black; padding: 10px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
 </head>
 <body>
-    <h2>ตารางนัดหมาย</h2>
+    <h1>ระบบจัดการตารางนัดหมาย</h1>
+    <form id="appointmentForm">
+        <label>หัวข้อ: <input type="text" id="title" required></label>
+        <label>วันที่: <input type="date" id="date" required></label>
+        <label>เวลาเริ่ม: <input type="time" id="startTime" required></label>
+        <label>เวลาสิ้นสุด: <input type="time" id="endTime" required></label>
+        <button type="submit">เพิ่มนัดหมาย</button>
+    </form>
     
+    <h2>ตารางนัดหมาย</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>หัวข้อ</th>
+                <th>วันที่</th>
+                <th>เวลาเริ่ม</th>
+                <th>เวลาสิ้นสุด</th>
+                <th>สถานะ</th>
+                <th>การจัดการ</th>
+            </tr>
+        </thead>
+        <tbody id="appointmentList"></tbody>
+    </table>
+
+   
 </body>
 </html>
+<script>
+    document.getElementById("appointmentForm").addEventListener("submit", function(event) {
+        event.preventDefault();
+        const title = document.getElementById("title").value;
+        const date = document.getElementById("date").value;
+        const startTime = document.getElementById("startTime").value;
+        const endTime = document.getElementById("endTime").value;
+        
+        const appointment = {
+            id: Date.now().toString(),
+            title,
+            date,
+            startTime,
+            endTime,
+            status: "confirmed"
+        };
+        
+        let appointments = JSON.parse(localStorage.getItem("appointments")) || [];
+        appointments.push(appointment);
+        localStorage.setItem("appointments", JSON.stringify(appointments));
+        
+        displayAppointments();
+        document.getElementById("appointmentForm").reset();
+    });
+    
+    function displayAppointments() {
+        const appointmentList = document.getElementById("appointmentList");
+        appointmentList.innerHTML = "";
+        const appointments = JSON.parse(localStorage.getItem("appointments")) || [];
+        
+        appointments.forEach(app => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${app.title}</td>
+                <td>${app.date}</td>
+                <td>${app.startTime}</td>
+                <td>${app.endTime}</td>
+                <td>${app.status}</td>
+                <td><button onclick="cancelAppointment('${app.id}')">ยกเลิก</button></td>
+            `;
+            appointmentList.appendChild(row);
+        });
+    }
+    
+    function cancelAppointment(appointmentId) {
+        let appointments = JSON.parse(localStorage.getItem("appointments")) || [];
+        appointments = appointments.map(app =>
+            app.id === appointmentId ? { ...app, status: "cancelled" } : app
+        );
+        localStorage.setItem("appointments", JSON.stringify(appointments));
+        displayAppointments();
+    }
+    
+    displayAppointments();
+</script>
